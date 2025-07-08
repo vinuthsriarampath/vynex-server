@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { sign } from "jsonwebtoken";
+import { SignJWT } from "jose";
 import type { NextRequest } from "next/server";
 
 const prisma = new PrismaClient();
@@ -25,30 +25,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 401 });
     }
 
-    // Verify password
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 });
     }
 
-    // Generate JWT token
-    const token = sign(
-      { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name },
-      process.env.NEXTAUTH_URL as string,
-      { expiresIn: "1h" }
-    );
+    console.log("JWT_SECRET:", process.env.JWT_SECRET);
 
-    return NextResponse.json({
+    // Generate JWT token with jose
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const token = await new SignJWT({
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("1d") // Extended to 1 day
+      .sign(secret);
+
+    const response = NextResponse.json({
       message: "Login successful",
       token,
       user: {
         id: user.id,
         email: user.email,
         first_name: user.first_name,
-        last_name: user.last_name
+        last_name: user.last_name,
       },
     });
+
+    // Store token in HTTP-only cookie (industry standard)
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60, // 1 day
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
+    console.error("Login error:", error);
     return NextResponse.json({ error: "Authentication failed" }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
