@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
           project_name: createdProject.project_name || createdProject.repo_name,
           language: createdProject.language || "",
           description: createdProject.description || "",
-          status: createdProject.status as "in-progress" | "done",
+          status: createdProject.status as "in-progress" | "completed",
         });
       } catch (error) {
         return NextResponse.json( { error: "Unable to create project" }, { status: 500 } );
