@@ -9,7 +9,7 @@ export async function GET(){
             }
         })
         if(!projects || projects.length==0){
-            return NextResponse.json([],{status:204})
+            return NextResponse.json([],{status:200})
         }
         return NextResponse.json(projects,{status:200})
     }catch(error){
