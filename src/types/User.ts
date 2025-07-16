@@ -1,13 +1,13 @@
 export interface User{
     id : number
-    first_name : String
-    last_name : String
-    contact : String
+    first_name : string
+    last_name : string
+    contact : string
     dob : Date
-    address : String
+    address : string
     postal_code : number
-    email : String
-    bio? : String 
+    email : string
+    bio? : string 
     createdAt : Date
     updatedAt : Date
 }
