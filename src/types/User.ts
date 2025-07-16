@@ -8,6 +8,7 @@ export interface User{
     postal_code : number
     email : string
     bio? : string 
+    avatar? : string
     createdAt : Date
     updatedAt : Date
 }
