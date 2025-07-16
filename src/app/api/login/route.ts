@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
         address:user.address,
         postal_code: user.postal_code,
         dob: user.dob,
-        bio:user.bio
+        bio:user.bio,
+        avatar:user.avatar
       },
     });
 
