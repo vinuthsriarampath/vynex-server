@@ -21,8 +21,10 @@ model User {
   contact String
   dob DateTime
   address String
+  postal_code Int
   email     String   @unique
-  password  String 
+  password  String
+  bio String? @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
