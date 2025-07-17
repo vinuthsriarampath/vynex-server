@@ -53,15 +53,13 @@ export async function POST(request: NextRequest) {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
+        contact: user.contact,
+        address:user.address,
+        postal_code: user.postal_code,
+        dob: user.dob,
+        bio:user.bio,
+        avatar:user.avatar
       },
-    });
-
-    // Store token in HTTP-only cookie (industry standard)
-    response.cookies.set("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60, // 1 day
-      path: "/",
     });
 
     return response;
