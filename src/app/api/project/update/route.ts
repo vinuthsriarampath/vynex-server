@@ -2,9 +2,16 @@ import {NextRequest, NextResponse} from "next/server";
 import {ProjectValidationSchema} from "@/lib/validations/project";
 import {prisma} from "@/lib/prisma";
 
-export async function PATCH(request:NextRequest,{ params }: { params: { projectId: string } }) {
+export async function PATCH(request:NextRequest) {
     try {
-        const projectId = parseInt(params.projectId);
+        const projectId = request.nextUrl.searchParams.get("projectId");
+
+        // Validate projectId
+        if (!projectId || isNaN(parseInt(projectId))) {
+            return NextResponse.json({ error: "Invalid or missing project ID" }, { status: 400 });
+        }
+
+        const parsedProjectId = parseInt(projectId);
 
         const newProjectData = await request.json();
 
@@ -24,12 +31,12 @@ export async function PATCH(request:NextRequest,{ params }: { params: { projectI
 
         const validatedData = validationResult.data;
 
-        if (isNaN(projectId)) {
+        if (isNaN(parsedProjectId)) {
             return NextResponse.json({error: "Invalid project ID"}, {status: 400});
         }
 
         const existingProject = await prisma.project.findUnique({
-            where: { id: projectId },
+            where: { id: parsedProjectId },
         });
         if (!existingProject) {
             return NextResponse.json({ error: "Project not found" }, { status: 404 });
