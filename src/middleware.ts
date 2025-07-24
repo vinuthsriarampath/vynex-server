@@ -8,7 +8,7 @@ interface JwtPayload {
   last_name: string;
 }
 
-const PUBLIC_API_ROUTES = ["/api/login", "/api/register"];
+const PUBLIC_API_ROUTES = ["/api/login", "/api/register","/api/open"];
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
