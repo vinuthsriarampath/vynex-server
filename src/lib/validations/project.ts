@@ -9,6 +9,8 @@ export const ProjectValidationSchema = z.object({
         .optional(),
 
     show_case: z.boolean(),
+
+    thumbnail: z.string(),
     
     repo_id: z.number()
         .int("Repository ID must be an integer")

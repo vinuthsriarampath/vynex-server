@@ -12,6 +12,9 @@ export async function GET(request:NextRequest){
         }
 
         const latestProjects = await prisma.project.findMany({
+            where:{
+                show_case: true,
+            },
             orderBy:{
                 createdAt: 'desc'
             },

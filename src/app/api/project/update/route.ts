@@ -54,6 +54,7 @@ export async function PATCH(request:NextRequest) {
                 clone_url:validatedData.clone_url,
                 show_case: validatedData.show_case,
                 status: validatedData.status,
+                thumbnail: validatedData.thumbnail,
                 createdAt: validatedData.createdAt,
                 updatedAt: validatedData.updatedAt,
             },
