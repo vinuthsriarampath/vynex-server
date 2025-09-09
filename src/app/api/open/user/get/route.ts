@@ -30,6 +30,17 @@ export async function GET(request:NextRequest){
                 bio:true,
                 avatar:true,
                 createdAt:true,
+                socials: {
+                    where: {
+                        priority: 1
+                    },
+                    select:{
+                        id:true,
+                        url:true,
+                        platform:true,
+                        username:true,
+                    }
+                }
             }
         })
 
