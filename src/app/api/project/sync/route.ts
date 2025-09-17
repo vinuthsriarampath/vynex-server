@@ -1,62 +1,74 @@
-import { prisma } from "@/lib/prisma";
-import { Project } from "@/types/project";
-import { NextRequest, NextResponse } from "next/server";
+import {prisma} from "@/lib/prisma";
+import {Project} from "@/types/project";
+import {NextRequest, NextResponse} from "next/server";
 
 export async function POST(request: NextRequest) {
-  const projects: Project[] = await request.json();
+    const {newProjects, deletedProjectIds} = await request.json();
 
-  if (!projects || !Array.isArray(projects)) {
-    return NextResponse.json(
-      { error: "Projects array is required" },
-      { status: 400 }
-    );
-  }
-
-  const newRepos: Project[] = [];
-
-  try {
-    for (const project of projects) {
-      if (!project.repo_id || typeof project.repo_id !== "number") {
-        
-        continue;
-      }
-      const foundRepo = await prisma.project.findUnique({
-        where: {
-          repo_id: project.repo_id,
-        },
-      });
-      if (foundRepo && foundRepo.repo_id === project.repo_id) {
-        continue;
-      }
-      try {
-        const createdProject = await prisma.project.create({
-          data: {
-            repo_id: project.repo_id,
-            project_name: project.repo_name,
-            repo_name: project.repo_name,
-            html_url: project.html_url,
-            description: project.description || "",
-            language: project.language,
-            clone_url: project.clone_url,
-            status: project.status,
-            createdAt: project.createdAt,
-            updatedAt: project.updatedAt,
-          },
-        });
-
-        newRepos.push({
-          ...createdProject,
-          project_name: createdProject.project_name || createdProject.repo_name,
-          language: createdProject.language || "",
-          description: createdProject.description || "",
-          status: createdProject.status as "in-progress" | "completed",
-        });
-      } catch (error) {
-        return NextResponse.json( { error: "Unable to create project" }, { status: 500 } );
-      }
+    if (!Array.isArray(newProjects) || !Array.isArray(deletedProjectIds)) {
+        return NextResponse.json(
+            {error: "newProjects and deletedProjectIds are required arrays"},
+            {status: 400}
+        );
     }
-    return NextResponse.json({ newRepos }, { status: 201 });
-  } catch (error) {
-    return NextResponse.json( { error: "Something Went Wrong!" },  { status: 500 } );
-  }
+
+    const newRepos: Project[] = [];
+    const actuallyDeletedIds: number[] = [];
+
+    try {
+        for (const project of newProjects) {
+            if (!project.repo_id || typeof project.repo_id !== "number") {
+                continue;
+            }
+
+            try {
+                const projectRecord = await prisma.project.upsert({
+                    where: {repo_id: project.repo_id},
+                    update: {
+                        repo_name: project.repo_name,
+                        html_url: project.html_url,
+                        description: project.description,
+                        language: project.language,
+                        clone_url: project.clone_url,
+                        status: project.status,
+                        createdAt: project.createdAt,
+                        updatedAt: project.updatedAt,
+                    },
+                    create: {
+                        repo_id: project.repo_id,
+                        project_name: project.repo_name,
+                        repo_name: project.repo_name,
+                        html_url: project.html_url,
+                        description: project.description || "",
+                        language: project.language,
+                        clone_url: project.clone_url,
+                        status: project.status,
+                        createdAt: project.createdAt,
+                        updatedAt: project.updatedAt,
+                    },
+                });
+
+                newRepos.push({
+                    ...projectRecord,
+                    project_name: projectRecord.project_name || projectRecord.repo_name,
+                    language: projectRecord.language || "",
+                    description: projectRecord.description || "",
+                    status: projectRecord.status as "in-progress" | "completed",
+                });
+            } catch (error) {
+                return NextResponse.json({error: "Unable to create/update project", details: error}, {status: 500});
+            }
+        }
+
+        if (deletedProjectIds.length > 0) {
+            await prisma.project.deleteMany({
+                where: {repo_id: {in: deletedProjectIds}},
+            });
+
+            actuallyDeletedIds.push(...deletedProjectIds);
+        }
+        return NextResponse.json({newRepos, deletedProjectIds: actuallyDeletedIds}, {status: 201});
+    } catch (error) {
+        return NextResponse.json({error: "Something Went Wrong!", details: error}, {status: 500});
+    }
 }
